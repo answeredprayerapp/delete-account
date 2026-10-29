@@ -5,21 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Delete your Answered account</title>
 <meta name="robots" content="noindex">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- No outside fonts, scripts or trackers: this page contacts only Answered's own server (Supabase). -->
 <style>
   :root { --ink: #1C2236; --ink-soft: #262E47; --line: #343D5C; --text: #F6F7FB; --muted: #C9CEDD; --gold: #E9B44C; --danger: #E5786D; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--ink); color: var(--text); font: 16px/1.5 'Plus Jakarta Sans', system-ui, sans-serif; }
+  body { margin: 0; background: var(--ink); color: var(--text); font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
   main { max-width: 480px; margin: 0 auto; padding: 48px 20px 64px; display: flex; flex-direction: column; gap: 20px; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; letter-spacing: .4px; }
-  h1 { margin: 8px 0 0; font: 400 34px/40px 'Newsreader', Georgia, serif; }
+  h1 { margin: 8px 0 0; font: 400 34px/40px Georgia, 'Times New Roman', serif; }
   p { margin: 0; color: var(--muted); }
   .card { background: var(--ink-soft); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
   label { font-weight: 600; font-size: 15px; }
   input[type=email], input[type=text] { width: 100%; min-height: 52px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--ink); color: var(--text); font: inherit; font-size: 17px; }
   input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-  button { min-height: 52px; border: 0; border-radius: 999px; font: 700 16px 'Plus Jakarta Sans', system-ui, sans-serif; cursor: pointer; background: var(--gold); color: var(--ink); }
+  button { min-height: 52px; border: 0; border-radius: 999px; font: 700 16px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; cursor: pointer; background: var(--gold); color: var(--ink); }
   button.danger { background: var(--danger); color: #1C2236; }
   button:disabled { opacity: .5; cursor: default; }
   .check { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--text); }
@@ -37,7 +36,7 @@
     Answered
   </div>
   <h1>Delete your Answered account</h1>
-  <p>This permanently deletes your account and everything stored with it: your online backup, any prayers you flagged, your daily counts and your agreement records. It can’t be undone.</p>
+  <p>This permanently deletes your account and the data stored with it: your online backup, any prayers you flagged, your daily counts and your agreement records. It can’t be undone. Copies in our providers’ routine security backups are removed when those backups expire.</p>
   <p class="note">Prayers saved only on your phone stay there until you uninstall Answered. If you still have the app, you can also delete everything in Settings → Account.</p>
   <div class="card">
     <p class="note"><strong style="color:var(--text)">Have a subscription?</strong> Deleting your account doesn’t cancel it. Cancel it first in <a href="https://play.google.com/store/account/subscriptions" target="_blank" rel="noopener">Google Play subscriptions</a>.</p>
@@ -60,7 +59,8 @@
 
   <div id="done" class="card" hidden>
     <label>Your account has been deleted.</label>
-    <p>Your account and everything stored with it are gone. Thank you for praying with Answered.</p>
+    <p>Your account and its data are deleted. Copies in our providers’ routine security backups are removed when those backups expire.</p>
+    <p>Thank you for praying with Answered.</p>
   </div>
 
   <p class="msg" id="msg" role="status" aria-live="polite"></p>

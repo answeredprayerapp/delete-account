@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Delete your Answered account</title>
 <meta name="robots" content="noindex">
-<!-- No outside fonts, scripts or trackers: this page contacts only Answered's own server (Supabase). -->
+<!-- No outside fonts, scripts or trackers: this page contacts only Answered's own server (Supabase) and, once
+     TURNSTILE_SITE_KEY below is set, Cloudflare Turnstile's bot check (challenges.cloudflare.com), declared in the
+     Privacy Policy. -->
 <style>
   :root { --ink: #1C2236; --ink-soft: #262E47; --line: #343D5C; --text: #F6F7FB; --muted: #C9CEDD; --gold: #E9B44C; --danger: #E5786D; }
   * { box-sizing: border-box; }
@@ -46,6 +48,7 @@
     <label for="email">1. The email of your Answered account</label>
     <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
     <p class="note">If you signed in with Google, use your Google email. We’ll send you a sign-in code to confirm it’s you.</p>
+    <div id="check"></div>
     <button id="send" type="submit">Send my code</button>
   </form>
 
@@ -74,6 +77,40 @@
   const say = (t) => { $('msg').textContent = t; };
   let email = '';
 
+  // Cloudflare Turnstile bot check on "Send my code" (9 Nov 2026). The site key is public. Empty = no check and no
+  // request to Cloudflare. Hidden unless Turnstile needs a tap; the one-time token goes to Supabase with the request.
+  const TURNSTILE_SITE_KEY = '0x4AAAAAAF5eqBr3oRbsbtnX';
+  let widget = null, used = false, finish = null;
+  window.onTurnstileLoad = () => {
+    widget = window.turnstile.render('#check', {
+      sitekey: TURNSTILE_SITE_KEY, execution: 'execute', appearance: 'interaction-only', size: 'flexible', theme: 'dark',
+      'refresh-expired': 'manual', retry: 'never',
+      callback: (t) => finish && finish(t),
+      'error-callback': () => { if (finish) finish(null); return true; },
+      'timeout-callback': () => finish && finish(null),
+      'unsupported-callback': () => finish && finish(null),
+      'before-interactive-callback': () => { say('One more step: please confirm below, then we’ll send your code.'); if (finish) wait(120000); },
+    });
+  };
+  if (TURNSTILE_SITE_KEY) {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  // A fresh token for each request, or null (not loaded, failed, no answer in time): Supabase then decides.
+  // 15 s for the invisible check; once Turnstile asks for a tap, two minutes from then.
+  let quiet = null;
+  const wait = (ms) => { clearTimeout(quiet); quiet = setTimeout(() => finish && finish(null), ms); };
+  function checkToken() {
+    if (!TURNSTILE_SITE_KEY || widget === null) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      finish = (t) => { clearTimeout(quiet); finish = null; resolve(t || null); };
+      wait(15000);
+      try { if (used) window.turnstile.reset(widget); used = true; window.turnstile.execute(widget); } catch (e) { finish(null); }
+    });
+  }
+
   async function post(path, body, token) {
     const res = await fetch(SUPABASE_URL + path, {
       method: 'POST',
@@ -92,10 +129,12 @@
     $('send').disabled = true; say('Sending…');
     // create_user false: never makes a new account. The same message either way, so this page
     // doesn't reveal whether an email has an account.
-    const r = await post('/auth/v1/otp', { email, create_user: false }).catch(() => ({ ok: false, status: 0 }));
+    const captcha = await checkToken();
+    const r = await post('/auth/v1/otp', { email, create_user: false, ...(captcha ? { gotrue_meta_security: { captcha_token: captcha } } : {}) }).catch(() => ({ ok: false, status: 0 }));
     $('send').disabled = false;
     if (r.status === 0) return say('Something went wrong. Please check your connection and try again.');
     if (r.status === 429) return say('Too many tries. Please wait a few minutes and try again.');
+    if (r.data && /captcha/i.test(String(r.data.error_code || r.data.msg || r.data.message || ''))) return say('We couldn’t confirm the request came from you. Please try again.');
     $('step-email').hidden = true; $('step-code').hidden = false;
     $('sent-to').textContent = 'If ' + email + ' has an Answered account, a code is on its way. It may take a minute, and it may be in spam.';
     say(''); $('code').focus();
